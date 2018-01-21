@@ -12,7 +12,7 @@
    - **Linked List**
    - **Hash Table**
    - **Binary Search Trees**
-2. What are some advantages to using a Hash Tables over an array in JavaScript?
+3. What are some advantages to using a Hash Tables over an array in JavaScript?
 
 ## Challenge
 If you take a look at the hash-table.js file you'll notice that it has solution code in it. You'll also notice that if you run the tests, they all pass. Your job is to refactor this hash table solution to use **linked lists** for buckets instead of arrays. You're welcome to add another class to the helper file, following the pattern used with LimitedArray.

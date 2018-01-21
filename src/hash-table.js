@@ -1,6 +1,6 @@
 /* eslint-disable no-unused-vars */
 /* eslint-disable class-methods-use-this */
-const { LimitedArray, getIndexBelowMax } = require('./hash-table-helpers');
+const { LimitedArray, getIndexBelowMax, LinkedList } = require('./hash-table-helpers');
 
 class HashTable {
   constructor(limit = 8) {
@@ -36,22 +36,55 @@ class HashTable {
   insert(key, value) {
     if (this.capacityIsFull()) this.resize();
     const index = getIndexBelowMax(key.toString(), this.limit);
-    let bucket = this.storage.get(index) || [];
-
-    bucket = bucket.filter(item => item[0] !== key);
-    bucket.push([key, value]);
-    this.storage.set(index, bucket);
+    if (!this.storage.get(index)) {
+      const bucket = new LinkedList();
+      bucket.addToTail([key, value]);
+      this.storage.set(index, bucket);
+    }
+    if (this.storage.get(index)) {
+      const bucket = index;
+      let keyNode = false;
+      let current = bucket.head;
+      while ((current.next !== null) && (!keyNode)) {
+        if (current.value[0] === key) {
+          current.value[1] = value;
+          keyNode = true;
+        }
+        current = current.next;
+      }
+      if (!keyNode) {
+        bucket.addToTail([key, value]);
+      }
+    }
   }
   // Removes the key, value pair from the hash table
   // Fetch the bucket associated with the given key using the getIndexBelowMax function
   // Remove the key, value pair from the bucket
   remove(key) {
     const index = getIndexBelowMax(key.toString(), this.limit);
-    let bucket = this.storage.get(index);
-
+    const bucket = this.storage.get(index);
     if (bucket) {
-      bucket = bucket.filter(item => item[0] !== key);
-      this.storage.set(index, bucket);
+      let found = false;
+      if (bucket.head.value[0] === key) {
+        bucket.removeHead();
+        found = true;
+      }
+      let previous = bucket.head;
+      let current = previous.next;
+      while ((current !== null) && (!found)) {
+        if (current.value[0] === key) {
+          previous.next = current.next;
+          current.next = null;
+          found = true;
+          if (bucket.tail === current) {
+            bucket.tail = previous;
+          }
+        }
+        if (!found) {
+          previous = current;
+          current = current.next;
+        }
+      }
     }
   }
   // Fetches the value associated with the given key from the hash table
@@ -60,12 +93,20 @@ class HashTable {
   retrieve(key) {
     const index = getIndexBelowMax(key.toString(), this.limit);
     const bucket = this.storage.get(index);
-    let retrieved;
     if (bucket) {
-      retrieved = bucket.filter(item => item[0] === key)[0];
+      let scan = bucket.head;
+      let found = false;
+      while (scan.next !== null) {
+        if (scan.value[0] === key) {
+          found = true;
+          return scan.value[1];
+        }
+        scan = scan.next;
+      }
+      if (!found) {
+        return undefined;
+      }
     }
-
-    return retrieved ? retrieved[1] : undefined;
   }
 }
 
